@@ -1,0 +1,3 @@
+frame,left_shoulder_to_right_shoulder_cm,left_hip_to_right_hip_cm,left_shoulder_to_left_elbow_cm,right_shoulder_to_right_elbow_cm,left_shoulder_to_left_hip_cm,right_shoulder_to_right_hip_cm,left_wrist_movement_cm,right_wrist_movement_cm,left_elbow_movement_cm,right_elbow_movement_cm
+0,28.164489438051643,18.612508412026443,23.392317594650166,25.640783839780863,46.72243773343919,46.361137842387095,0.0,0.0,0.0,0.0
+50,33.706435890022,19.63719918513673,26.322061826071117,26.76976424160326,48.81859799506825,47.94051279812242,54.403937432535756,55.760486045959404,28.445895654590256,28.7641318595339
