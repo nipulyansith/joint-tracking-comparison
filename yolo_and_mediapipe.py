@@ -7,13 +7,10 @@ import mediapipe as mp
 from ultralytics import YOLO
 
 # --- SETTINGS ---
-VIDEO_PATH = "junior_side.mp4"
+VIDEO_PATH = "nipuledit2.mp4"
 JOINTS = [
-    "right_elbow", "left_elbow",
-    "right_knee", "left_knee",
-    "right_shoulder", "left_shoulder",
-    "right_hip", "left_hip",
-    "right_wrist", "left_wrist"
+    "right_shoulder", "right_elbow", "right_wrist",
+    "left_shoulder", "left_elbow", "left_wrist"
 ]
 
 OUT_DIR = "output"
@@ -37,15 +34,11 @@ yolo_model = YOLO("yolov8n-pose.pt")
 # 9 left_wrist, 10 right_wrist, 11 left_hip, 12 right_hip,
 # 13 left_knee, 14 right_knee, 15 left_ankle, 16 right_ankle
 JOINT_TO_COCO_IDX = {
-    "right_elbow": 8,
-    "left_elbow": 7,
-    "right_knee": 14,
-    "left_knee": 13,
     "right_shoulder": 6,
-    "left_shoulder": 5,
-    "right_hip": 12,
-    "left_hip": 11,
+    "right_elbow": 8,
     "right_wrist": 10,
+    "left_shoulder": 5,
+    "left_elbow": 7,
     "left_wrist": 9
 }
 

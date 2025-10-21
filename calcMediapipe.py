@@ -5,7 +5,7 @@ import math
 CSV_FILE = "output/mediapipe_joints.csv"   # <-- Mediapipe joints CSV
 OUTPUT_FILE = "output/mediapipe_distances.csv"
 BASKET_HEIGHT_CM = 17.6        # Real-world basket height in cm
-BASKET_PIXEL_HEIGHT = 35       # Basket height in pixels (measured from clicks)
+BASKET_PIXEL_HEIGHT = 35    # Basket height in pixels (measured from clicks)
 
 # === Load CSV ===
 df = pd.read_csv(CSV_FILE)
@@ -18,14 +18,22 @@ print(f"Scale: {cm_per_pixel:.4f} cm per pixel")
 def distance(p1, p2):
     return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2) * cm_per_pixel
 
+# Ground truth measurements (in cm)
+GROUND_TRUTH = {
+    "shoulder_to_elbow": 28.0,  # cm
+    "elbow_to_wrist": 27.0      # cm
+}
+
 # Define joint pairs we care about (static body proportions)
 PAIRS = [
+    ("left_shoulder", "left_elbow"),       # Left upper arm
+    ("right_shoulder", "right_elbow"),     # Right upper arm
+    ("left_elbow", "left_wrist"),         # Left forearm
+    ("right_elbow", "right_wrist"),       # Right forearm
     ("left_shoulder", "right_shoulder"),   # Shoulder width
-    ("left_hip", "right_hip"),             # Hip width
-    ("left_shoulder", "left_elbow"),       # Left arm
-    ("right_shoulder", "right_elbow"),     # Right arm
-    ("left_shoulder", "left_hip"),         # Left body side
-    ("right_shoulder", "right_hip")        # Right body side
+    ("left_hip", "right_hip"),            # Hip width
+    ("left_shoulder", "left_hip"),        # Left body side
+    ("right_shoulder", "right_hip")       # Right body side
 ]
 
 # === Collect results per frame ===
@@ -60,10 +68,34 @@ for frame in frames_sorted:
         else:
             row[f"{joint}_movement_cm"] = None
 
+    # also expose shoulder width as a convenience column (left_shoulder_to_right_shoulder_cm)
+    row['shoulder_width'] = row.get('left_shoulder_to_right_shoulder_cm', None)
+
     results.append(row)
 
 # Save results
 results_df = pd.DataFrame(results)
+
+# Ensure consistent column order across calculators
+canonical_cols = [
+    'frame',
+    'left_shoulder_to_right_shoulder_cm',
+    'left_hip_to_right_hip_cm',
+    'left_shoulder_to_left_elbow_cm',
+    'right_shoulder_to_right_elbow_cm',
+    'left_elbow_to_left_wrist_cm',
+    'right_elbow_to_right_wrist_cm',
+    'left_shoulder_to_left_hip_cm',
+    'right_shoulder_to_right_hip_cm',
+    'left_wrist_movement_cm',
+    'right_wrist_movement_cm',
+    'left_elbow_movement_cm',
+    'right_elbow_movement_cm',
+    'shoulder_width'
+]
+
+# Reindex will add any missing columns with NaN and order them consistently
+results_df = results_df.reindex(columns=canonical_cols)
 results_df.to_csv(OUTPUT_FILE, index=False)
 
 print(f"✅ Distances + movements saved to {OUTPUT_FILE}")

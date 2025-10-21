@@ -2,7 +2,7 @@ import pandas as pd
 import math
 
 # === SETTINGS ===
-CSV_FILE = "joints_coordinates.csv"
+CSV_FILE = "joints_coordinates_test.csv"
 BASKET_HEIGHT_CM = 17.6        # Real-world basket height in cm
 BASKET_PIXEL_HEIGHT = 35       # Basket height in pixels (measured from clicks)
 

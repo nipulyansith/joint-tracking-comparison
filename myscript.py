@@ -1,7 +1,7 @@
 import cv2
 import csv
 
-video_path = "junior_side.mp4"
+video_path = "nipuledit2.mp4"
 output_csv = "joints_coordinates_test.csv"
 
 cap = cv2.VideoCapture(video_path)
@@ -26,7 +26,7 @@ frame_idx = 0
 basket_points = []  # store top & bottom of basket
 
 # Resize factor for display
-resize_factor = 0.7  # adjust this to fit your screen
+resize_factor = 1.2  # increased for larger display
 
 # Mode control: first capture basket, then joints
 mode = "basket"  # "basket" or "joints"

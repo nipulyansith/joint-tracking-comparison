@@ -1,3 +1,3 @@
-frame,left_shoulder_to_right_shoulder_cm,left_hip_to_right_hip_cm,left_shoulder_to_left_elbow_cm,right_shoulder_to_right_elbow_cm,left_shoulder_to_left_hip_cm,right_shoulder_to_right_hip_cm,left_wrist_movement_cm,right_wrist_movement_cm,left_elbow_movement_cm,right_elbow_movement_cm
-0,28.662857142857145,18.109839923114073,23.180568921193547,25.640783839780863,47.292638250081396,46.396576932144555,0.0,0.0,0.0,0.0
-50,33.20380602722943,19.63719918513673,26.322061826071117,27.321390588208892,48.71748929558364,47.94051279812242,54.75834913508624,56.079281488308126,28.445895654590256,28.7641318595339
+frame,left_shoulder_to_right_shoulder_cm,left_hip_to_right_hip_cm,left_shoulder_to_left_elbow_cm,right_shoulder_to_right_elbow_cm,left_shoulder_to_left_hip_cm,right_shoulder_to_right_hip_cm,left_wrist_movement_cm,right_wrist_movement_cm,left_elbow_movement_cm,right_elbow_movement_cm,shoulder_width
+0,31.68399067835557,,30.492388076571586,29.770671775409834,,,0.0,0.0,0.0,0.0,31.68399067835557
+15,25.162963389287288,,28.146527389389135,27.450657774357577,,,123.30258120012024,123.40097892642505,65.96826447897008,67.06877761382151,25.162963389287288
