@@ -1,0 +1,11 @@
+frame,joint,x,y
+100,right_elbow,595,263
+100,left_elbow,708,259
+100,right_knee,621,409
+100,left_knee,670,409
+100,right_shoulder,598,190
+100,left_shoulder,696,190
+100,right_hip,605,325
+100,left_hip,679,322
+100,right_wrist,587,318
+100,left_wrist,721,315
