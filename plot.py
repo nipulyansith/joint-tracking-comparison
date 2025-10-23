@@ -2,42 +2,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Ground truth measurements
+# === Ground Truth reference values (static) ===
 GROUND_TRUTH = {
     "shoulder_to_elbow": 28.0,  # cm
-    "elbow_to_wrist": 27.0  ,    # cm
-    "shoulder_width": 38.0     # cm
+    "elbow_to_wrist": 27.0,     # cm
+    "shoulder_width": 38.0      # cm
 }
-import numpy as np
 
 # === Load CSVs ===
 gt_file = "ground_truth_distances.csv"
 yolo_file = "output/yolo_distances.csv"
 mp_file = "output/mediapipe_distances.csv"
 
+# Load into DataFrames
 gt_df = pd.read_csv(gt_file)
 yolo_df = pd.read_csv(yolo_file)
 mp_df = pd.read_csv(mp_file)
-
-# Desired frames
-desired_frames = [0, 50]
-
-# Helper: find nearest available frame in a dataframe
-def nearest_frame(df, target):
-    frames = np.sort(df['frame'].unique())
-    if target in frames:
-        return target
-    # find nearest
-    idx = np.argmin(np.abs(frames - target))
-    return int(frames[idx])
-
-# Resolve frames present in ground truth (prefer using ground truth frames if available)
-available_frames = sorted(gt_df['frame'].unique())
-frames_to_plot = []
-for f in desired_frames:
-    frames_to_plot.append(nearest_frame(gt_df, f) if len(available_frames) > 0 else f)
-
-# Ensure the other dataframes contain the chosen frames; if not, we'll pick nearest in them too when reading rows
 
 # === Columns to compare ===
 cols = [
@@ -50,84 +30,52 @@ cols = [
     "right_elbow_movement_cm"
 ]
 
-# Helper to build ground truth row according to rules:
-# - shoulder width uses GROUND_TRUTH['shoulder_width'] mapped to left_shoulder_to_right_shoulder_cm
-# - shoulder_to_elbow and elbow_to_wrist use GROUND_TRUTH values for both left and right shoulder-elbow and elbow-wrist
-# - other columns (hips, movements) come from gt_df if available for that frame
-def build_gt_row(frame):
-    row = {}
-    # try to get the calculated ground truth row if present
-    gt_frame_row = gt_df[gt_df['frame'] == frame]
-    for c in cols:
-        row[c] = None
+# === Prepare Ground Truth Data ===
+# For ground truth, we’ll use fixed reference values unless they’re present in gt_df.
+gt_df_filled = pd.DataFrame()
+gt_df_filled['frame'] = gt_df['frame'] if 'frame' in gt_df.columns else yolo_df['frame']
 
-    # shoulder width -> map into 'shoulder_width' column
-    if 'left_shoulder_to_right_shoulder_cm' in gt_df.columns and not gt_frame_row.empty and not pd.isna(gt_frame_row['left_shoulder_to_right_shoulder_cm'].values[0]):
-        row['shoulder_width'] = float(gt_frame_row['left_shoulder_to_right_shoulder_cm'].values[0])
+for col in cols:
+    if col in gt_df.columns:
+        gt_df_filled[col] = gt_df[col]
     else:
-        row['shoulder_width'] = GROUND_TRUTH['shoulder_width']
-
-    # shoulder->elbow and elbow->wrist map
-    for side in ['left', 'right']:
-        se_col = f"{side}_shoulder_to_{side}_elbow_cm"
-        ew_col = f"{side}_elbow_to_{side}_wrist_cm"
-        # prefer calculated gt if present
-        if se_col in gt_df.columns and not gt_frame_row.empty and not pd.isna(gt_frame_row[se_col].values[0]):
-            se_val = float(gt_frame_row[se_col].values[0])
+        # Fill with appropriate ground truth constant
+        if 'shoulder_to_elbow' in col:
+            gt_df_filled[col] = GROUND_TRUTH['shoulder_to_elbow']
+        elif 'elbow_to_wrist' in col:
+            gt_df_filled[col] = GROUND_TRUTH['elbow_to_wrist']
+        elif 'shoulder_width' in col:
+            gt_df_filled[col] = GROUND_TRUTH['shoulder_width']
         else:
-            se_val = GROUND_TRUTH['shoulder_to_elbow']
-        if ew_col in gt_df.columns and not gt_frame_row.empty and not pd.isna(gt_frame_row[ew_col].values[0]):
-            ew_val = float(gt_frame_row[ew_col].values[0])
-        else:
-            ew_val = GROUND_TRUTH['elbow_to_wrist']
-        # map into expected cols if present
-        if f"{side}_shoulder_to_{side}_elbow_cm" in cols:
-            row[f"{side}_shoulder_to_{side}_elbow_cm"] = se_val
-        # Note: elbow->wrist columns are not requested as separate cols in this plot; movements are used instead
+            gt_df_filled[col] = np.nan
 
-    # For the rest, try to pick from gt_frame_row if available
-    for c in cols:
-        if c in gt_df.columns and not gt_frame_row.empty and not pd.isna(gt_frame_row[c].values[0]):
-            row[c] = float(gt_frame_row[c].values[0])
+# === Align frames across all datasets ===
+common_frames = sorted(
+    set(yolo_df['frame']).union(set(mp_df['frame'])).union(set(gt_df_filled['frame']))
+)
 
-    # ensure all keys exist in the same order as cols
-    return [row[c] if row[c] is not None else np.nan for c in cols]
+yolo_df = yolo_df.set_index('frame').reindex(common_frames).reset_index()
+mp_df = mp_df.set_index('frame').reindex(common_frames).reset_index()
+gt_df_filled = gt_df_filled.set_index('frame').reindex(common_frames).reset_index()
 
+# === Plotting loop for each column ===
+for col in cols:
+    plt.figure(figsize=(10, 5))
 
-# === Plotting ===
-for frame in frames_to_plot:
-    # find nearest frame in each df if exact frame missing
-    frame_yolo = nearest_frame(yolo_df, frame) if 'frame' in yolo_df.columns else frame
-    frame_mp = nearest_frame(mp_df, frame) if 'frame' in mp_df.columns else frame
+    # Plot each source as a line
+    plt.plot(yolo_df['frame'], yolo_df[col], label='YOLO', color='orange', linewidth=2, marker='o')
+    plt.plot(mp_df['frame'], mp_df[col], label='Mediapipe', color='green', linewidth=2, marker='x')
+    plt.plot(gt_df_filled['frame'], gt_df_filled[col], label='Ground Truth', color='blue', linewidth=2, linestyle='--')
 
-    gt_row = build_gt_row(frame)
-
-    # Read rows from YOLO and MP (if missing, fill nan)
-    def read_row(df, frame_key):
-        if frame_key in df['frame'].values:
-            r = df[df['frame'] == frame_key]
-            return [float(r[c].values[0]) if c in r.columns and not pd.isna(r[c].values[0]) else np.nan for c in cols]
-        else:
-            return [np.nan] * len(cols)
-
-    yolo_row = read_row(yolo_df, frame_yolo)
-    mp_row = read_row(mp_df, frame_mp)
-
-    x = np.arange(len(cols))  # positions for bars
-    width = 0.25  # bar width
-
-    fig, ax = plt.subplots(figsize=(14,6))
-    ax.bar(x - width, gt_row, width, label='Ground Truth', color='blue')
-    ax.bar(x, yolo_row, width, label='YOLO', color='orange')
-    ax.bar(x + width, mp_row, width, label='Mediapipe', color='green')
-
-    ax.set_ylabel('Distance (cm)')
-    ax.set_title(f'Frame {frame} - Ground Truth vs YOLO vs Mediapipe')
-    ax.set_xticks(x)
-    ax.set_xticklabels(cols, rotation=45, ha='right')
-    ax.legend()
+    plt.title(f"{col.replace('_', ' ').title()} Comparison")
+    plt.xlabel("Frame")
+    plt.ylabel("Distance (cm)")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
-    out_path = f"output/comparison_frame_{frame}.png"
+
+    # Save the figure
+    out_path = f"output/linegraph_{col}.png"
     plt.savefig(out_path)
-    print(f"Saved comparison plot: {out_path}")
+    print(f"✅ Saved: {out_path}")
     plt.show()

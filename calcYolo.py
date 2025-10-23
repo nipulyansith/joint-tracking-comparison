@@ -52,12 +52,18 @@ for frame in frames_sorted:
 
         else:
             row[f"{j1}_to_{j2}_cm"] = None
-            # if shoulder pair missing, shoulder_width also None
             if j1 == "left_shoulder" and j2 == "right_shoulder":
                 row["shoulder_width"] = None
 
-    # --- Movement tracking (wrist + elbow motion) ---
-    for joint in ["left_wrist", "right_wrist", "left_elbow", "right_elbow"]:
+    # --- Movement tracking (wrist, elbow, shoulder, knee) ---
+    moving_joints = [
+        "left_wrist", "right_wrist",
+        "left_elbow", "right_elbow",
+        "left_shoulder", "right_shoulder",
+        "left_knee", "right_knee"
+    ]
+
+    for joint in moving_joints:
         p = frame_data[frame_data['joint'] == joint][['x','y']].values
         if len(p) > 0:
             p = p[0]
@@ -82,10 +88,16 @@ canonical_cols = [
     'right_shoulder_to_right_elbow_cm',
     'left_shoulder_to_left_hip_cm',
     'right_shoulder_to_right_hip_cm',
+    # Movements
     'left_wrist_movement_cm',
     'right_wrist_movement_cm',
     'left_elbow_movement_cm',
     'right_elbow_movement_cm',
+    'left_shoulder_movement_cm',
+    'right_shoulder_movement_cm',
+    'left_knee_movement_cm',
+    'right_knee_movement_cm',
+    # Derived / summary
     'shoulder_width'
 ]
 
@@ -97,6 +109,6 @@ for col in canonical_cols:
 results_df = results_df[canonical_cols]
 results_df.to_csv(OUTPUT_FILE, index=False)
 
-print(f"✅ Distances + movements (with shoulder width) saved to {OUTPUT_FILE}")
+print(f"✅ Distances + movements (shoulders, elbows, wrists, knees) saved to {OUTPUT_FILE}")
 print(df['frame'].unique())
 print(len(df['frame'].unique()))
