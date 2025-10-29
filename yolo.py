@@ -4,7 +4,7 @@ from pathlib import Path
 from ultralytics import YOLO
 
 # === SETTINGS ===
-VIDEO_FILE = "nipuledit2.mp4"  # path to your video
+VIDEO_FILE = "nipuledit.mp4"  # path to your video
 OUTPUT_FOLDER = Path("output")
 OUTPUT_FOLDER.mkdir(exist_ok=True)
 YOLO_CSV = OUTPUT_FOLDER / "yolo_joints.csv"
