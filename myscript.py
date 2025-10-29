@@ -1,15 +1,19 @@
 import cv2
 import csv
 
-video_path = "nipuledit2.mp4"
-output_csv = "joints_coordinates_testttt.csv"
+video_path = "nipul.mp4"
+output_csv = "joints_coordinates_testttttt_test.csv"
 
 cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 print("FPS:", fps)
 print("Total Frames:", total_frames)
+
+print(f"Resolution: {width}x{height}")
 
 # Joints in sequential order (added wrists)
 JOINTS = [
@@ -17,7 +21,7 @@ JOINTS = [
     "right_knee", "left_knee",
     "right_shoulder", "left_shoulder",
     "right_hip", "left_hip",
-    "right_wrist", "left_wrist"   # ✅ added wrists
+    "right_wrist", "left_wrist"   
 ]
 
 coordinates = []
@@ -26,7 +30,7 @@ frame_idx = 0
 basket_points = []  # store top & bottom of basket
 
 # Resize factor for display
-resize_factor = 1.2  # increased for larger display
+resize_factor = 0.8  # increased for larger display
 
 # Mode control: first capture basket, then joints
 mode = "basket"  # "basket" or "joints"
