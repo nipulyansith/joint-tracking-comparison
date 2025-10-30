@@ -6,8 +6,8 @@ CSV_FILE = "output/yolo_joints.csv"       # Input joint coordinates file
 OUTPUT_FILE = "output/yolo_distances.csv" # Output distance file
 
 # === CONSTANTS ===
-BASKET_HEIGHT_CM = 33.5     # Real-world basket height in cm
-BASKET_PIXEL_HEIGHT = 192     # Basket height in pixels (from manual measurement)
+BASKET_HEIGHT_CM = 33.5      # Real-world basket height in cm
+BASKET_PIXEL_HEIGHT = 192    # Basket height in pixels (from manual measurement)
 
 # === Load CSV ===
 df = pd.read_csv(CSV_FILE)
@@ -20,6 +20,23 @@ print(f"Scale: {cm_per_pixel:.4f} cm per pixel")
 def distance(p1, p2):
     """Euclidean distance between two (x,y) points in cm"""
     return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2) * cm_per_pixel
+
+# === Function to calculate angle (in degrees) at point B given three points A-B-C ===
+def angle_at_point(A, B, C):
+    """Calculate the angle at point B (A-B-C) in degrees"""
+    try:
+        BA = (A[0] - B[0], A[1] - B[1])
+        BC = (C[0] - B[0], C[1] - B[1])
+        dot_product = BA[0]*BC[0] + BA[1]*BC[1]
+        mag_BA = math.sqrt(BA[0]**2 + BA[1]**2)
+        mag_BC = math.sqrt(BC[0]**2 + BC[1]**2)
+        if mag_BA == 0 or mag_BC == 0:
+            return None
+        cos_angle = max(-1, min(1, dot_product / (mag_BA * mag_BC)))  # Clamp to avoid errors
+        angle_deg = math.degrees(math.acos(cos_angle))
+        return angle_deg
+    except:
+        return None
 
 # === Define joint pairs (fixed body segments) ===
 PAIRS = [
@@ -78,6 +95,34 @@ for frame in frames_sorted:
         else:
             row[f"{joint}_movement_cm"] = None
 
+    # --- Elbow Angles (wrist → elbow → shoulder) ---
+    left_points = {
+        "wrist": frame_data[frame_data['joint'] == "left_wrist"][['x', 'y']].values,
+        "elbow": frame_data[frame_data['joint'] == "left_elbow"][['x', 'y']].values,
+        "shoulder": frame_data[frame_data['joint'] == "left_shoulder"][['x', 'y']].values
+    }
+    right_points = {
+        "wrist": frame_data[frame_data['joint'] == "right_wrist"][['x', 'y']].values,
+        "elbow": frame_data[frame_data['joint'] == "right_elbow"][['x', 'y']].values,
+        "shoulder": frame_data[frame_data['joint'] == "right_shoulder"][['x', 'y']].values
+    }
+
+    # Left elbow angle
+    if all(len(left_points[j]) > 0 for j in left_points):
+        row["left_elbow_angle_deg"] = angle_at_point(
+            left_points["wrist"][0], left_points["elbow"][0], left_points["shoulder"][0]
+        )
+    else:
+        row["left_elbow_angle_deg"] = None
+
+    # Right elbow angle
+    if all(len(right_points[j]) > 0 for j in right_points):
+        row["right_elbow_angle_deg"] = angle_at_point(
+            right_points["wrist"][0], right_points["elbow"][0], right_points["shoulder"][0]
+        )
+    else:
+        row["right_elbow_angle_deg"] = None
+
     results.append(row)
 
 # === Convert to DataFrame ===
@@ -102,7 +147,9 @@ canonical_cols = [
     'right_shoulder_movement_cm',
     'left_knee_movement_cm',
     'right_knee_movement_cm',
-    'shoulder_width'
+    'shoulder_width',
+    'left_elbow_angle_deg',
+    'right_elbow_angle_deg'
 ]
 
 for col in canonical_cols:
@@ -113,5 +160,5 @@ results_df = results_df[canonical_cols]
 
 # === Save to CSV ===
 results_df.to_csv(OUTPUT_FILE, index=False)
-print(f"✅ Distances + movements saved to {OUTPUT_FILE}")
+print(f"✅ Distances + movements + elbow angles saved to {OUTPUT_FILE}")
 print(f"Frames processed: {len(frames_sorted)}")

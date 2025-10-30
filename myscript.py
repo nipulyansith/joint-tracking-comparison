@@ -2,7 +2,7 @@ import cv2
 import csv
 
 video_path = "nipul.mp4"
-output_csv = "joints_coordinates_testttttt_test.csv"
+output_csv = "joints_coordinates_test.csv"
 
 cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)
